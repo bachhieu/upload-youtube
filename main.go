@@ -16,20 +16,12 @@ import (
 // Selectors
 
 var (
-	path     = flag.String("path", "E:\\WorkSpace\\.BACKOFFICE\\upload-youtube\\video.mp4", "path of list video to upload")
-	channel  = flag.String("channel", "", "Play list")
-	playList = flag.String("playList", "", "Play list")
+	path     = flag.String("path", "", "Là đường dẫn tới file muốn upload")
+	channel  = flag.String("channel", "", "Là ID của kênh muốn upload")
+	playlist = flag.String("playlist", "", "Danh sách phát muốn thêm vào")
 )
 
 var baseUri = "https://studio.youtube.com/channel/%s/videos/upload"
-
-// var uri = "https://google.com/"
-
-type Upload struct {
-	Path string `json:"path"`
-	Type string `json:"type"`
-	Link string `json:"link"`
-}
 
 func main() {
 	flag.Parse()
@@ -64,7 +56,7 @@ func main() {
 		if up.Type != "video" {
 			continue
 		}
-		up.Playlist = *playList
+		up.Playlist = *playlist
 
 		task := chromedp.Tasks{
 			chromedp.Sleep(1 * time.Second),
