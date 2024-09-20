@@ -17,11 +17,12 @@ import (
 )
 
 type Upload struct {
-	Path     string `json:"path"`
-	Playlist string `json:"playlist"`
-	Channel  string `json:"channel"`
-	Type     string `json:"type"`
-	Link     string `json:"link"`
+	Path     string  `json:"path"`
+	Playlist string  `json:"playlist"`
+	Channel  *string `json:"channel"`
+	Type     string  `json:"type"`
+	Link     string  `json:"link"`
+	Date     string  `json:"date"`
 }
 
 var userDataDir = ""
@@ -34,13 +35,14 @@ func SetupContextChrome() (context.Context, context.CancelFunc) {
 		chromedp.Flag("remote-debugging-port", "9222"),
 		chromedp.Flag("allow-running-insecure-content", true),
 	)
-	ctx, _ := context.WithTimeout(context.Background(), 300*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
 	allocCtx, _ := chromedp.NewExecAllocator(ctx, opts...)
 	return chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 }
 
 func ListFilesInDirectory(directory string) ([]*Upload, error) {
 	uploads := make([]*Upload, 0)
+	date := time.Now().Format(time.DateOnly)
 	// Walk through all files and directories in the specified directory
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -51,6 +53,7 @@ func ListFilesInDirectory(directory string) ([]*Upload, error) {
 			up := &Upload{
 				Path: path,
 				Type: getFileType(path),
+				Date: date,
 			}
 			uploads = append(uploads, up) // Thêm đường dẫn file vào slice
 		}
@@ -80,7 +83,7 @@ func IsChromeBrowserVisible() bool {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
-		cmd = exec.Command("powershell", "-Command", `WMIC PROCESS WHERE "name='chrome.exe'" GET CommandLine | findstr "User Data\\youtube"`)
+		cmd = exec.Command("powershell", "-Command", `WMIC PROCESS WHERE "name='chrome.exe'" GET CommandLine | findstr "youtube"`)
 	case "darwin":
 		cmd = exec.Command("osascript", "-e", `tell application "System Events" to count (every process whose name is "Google Chrome" and visible is true)`)
 	default: // Linux

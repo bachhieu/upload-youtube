@@ -21,7 +21,10 @@ var (
 	playlist = flag.String("playlist", "", "Danh sách phát muốn thêm vào")
 )
 
-var baseUri = "https://studio.youtube.com/channel/%s/videos/upload"
+var (
+	baseUri             = "https://studio.youtube.com/channel/%s/videos/upload"
+	ChannelName *string = new(string)
+)
 
 func main() {
 	flag.Parse()
@@ -51,12 +54,16 @@ func main() {
 	}
 	ctx, cancel := helper.SetupContextChrome()
 	defer cancel()
-	tasks := chromedp.Tasks{chromedp.Navigate(fmt.Sprintf(baseUri, *channel))}
+	tasks := chromedp.Tasks{
+		chromedp.Navigate(fmt.Sprintf(baseUri, *channel)),
+		helper.ActionGetChannelName(ChannelName),
+	}
 	for _, up := range uploads {
 		if up.Type != "video" {
 			continue
 		}
 		up.Playlist = *playlist
+		up.Channel = ChannelName
 
 		task := chromedp.Tasks{
 			chromedp.Sleep(1 * time.Second),
@@ -73,6 +80,7 @@ func main() {
 	// Keep the browser open
 	color.Green("Đã hoàn thành tải video trong đường dẫn %s lên channelID: %s \n", *path, *channel)
 	printf(uploads)
+	helper.UploadSheet(uploads)
 	color.Green("kết thúc!")
 }
 

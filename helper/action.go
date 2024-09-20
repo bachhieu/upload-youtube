@@ -28,6 +28,17 @@ func CommandUpload(u *Upload, ctx context.Context) chromedp.Tasks {
 	}
 }
 
+func ActionGetChannelName(channelName *string) chromedp.Tasks {
+	keyAvatar := "#avatar-btn"
+	keyChannelName := "#channel-handle"
+	return chromedp.Tasks{
+		actionClick(keyAvatar),
+		chromedp.Text(keyChannelName, channelName, chromedp.ByID),
+		chromedp.Sleep(sleep500ms),
+		chromedp.Click(keyAvatar, chromedp.ByQuery), // close modal
+	}
+}
+
 func actionCreateUpload() chromedp.Tasks {
 	return chromedp.Tasks{
 		chromedp.WaitVisible("#create-icon > ytcp-button-shape", chromedp.ByQuery),
@@ -64,21 +75,24 @@ func actionChoicePlaylist(name string) chromedp.Tasks {
 			chromedp.Sleep(sleep500ms),
 		}
 	}
-	key := "#items > ytcp-ve > li > label"
+	key := "#basics div > ytcp-video-metadata-playlists > ytcp-text-dropdown-trigger > ytcp-dropdown-trigger > div > div> span"
 	return chromedp.Tasks{
-		chromedp.Sleep(sleep500ms),
+		actionClick(key),
 		chromedp.WaitVisible(key),
+		chromedp.Sleep(sleep500ms),
+		chromedp.WaitVisible("#items > ytcp-ve > li > label"),
 		chromedp.Evaluate(fmt.Sprintf(`
-				const checkboxes = document.querySelectorAll('%s');
+				var checkboxes = document.querySelectorAll('#items > ytcp-ve > li > label');
 				checkboxes.forEach(checkbox => {
-					const name = checkbox.closest('label') || document.querySelector('label[for="' + checkbox.id + '"]');
+					const label = checkbox.closest('label') || document.querySelector('label[for="' + checkbox.id + '"]');
 					if (label && label.textContent.trim() === "%s") {
 						if (!checkbox.checked) {
 							checkbox.click();
 						}
 					}
 				});
-			`, key, name), nil),
+			`, name), nil),
+		actionNext(), // close modal
 	}
 }
 
