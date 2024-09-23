@@ -29,7 +29,7 @@ func CommandUpload(u *Upload, ctx context.Context) chromedp.Tasks {
 }
 
 func ActionGetChannelName(channelName *string) chromedp.Tasks {
-	keyAvatar := "#avatar-btn"
+	keyAvatar := "#avatar-btn, #account-button"
 	keyChannelName := "#channel-handle"
 	return chromedp.Tasks{
 		actionClick(keyAvatar),
