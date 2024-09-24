@@ -47,12 +47,17 @@ func main() {
 		return
 	}
 
+	if len(uploads) == 0 {
+		color.Red("Vui lòng kiểm tra lại!. Không tìm thấy video nào trong đường dẫn %s \n", *path)
+		return
+	}
+
 	// Check for open Chrome windows
 	if helper.IsChromeBrowserVisible() {
 		color.Red("Vui lòng tắt cửa sổ trình duyệt trước khi chạy ứng dụng")
 		return
 	}
-	ctx, cancel := helper.SetupContextChrome()
+	ctx, cancel := helper.SetupContextChrome(len(uploads))
 	defer cancel()
 	tasks := chromedp.Tasks{
 		chromedp.Navigate(fmt.Sprintf(baseUri, *channel)),

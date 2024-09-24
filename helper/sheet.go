@@ -20,6 +20,7 @@ const (
 var (
 	baseField = []interface{}{"Link Folder", "Channel", "Danh sách phát", "Link Youtube", "Date"}
 	sheetName = time.Now().Format("01/2006")
+	sheetID   = int64(0)
 )
 
 func UploadSheet(ups []*Upload) error {
@@ -64,6 +65,7 @@ func UploadSheet(ups []*Upload) error {
 	for _, sheet := range res.Sheets {
 		if sheet.Properties.Title == sheetName {
 			sheetExists = true
+			sheetID = sheet.Properties.SheetId
 			break
 		}
 	}
@@ -75,7 +77,8 @@ func UploadSheet(ups []*Upload) error {
 	if err := addValues(srv, ups); err != nil {
 		return err
 	}
-	color.Yellow("Hoàn thành cập nhật thông tin mới lên sheet ")
+	color.Yellow("https://docs.google.com/spreadsheets/d/%s/?gid=%v#gid=%v", spreadsheetID, sheetID, sheetID)
+	color.Yellow("Hoàn thành cập nhật thông tin mới lên sheet")
 	return nil
 }
 
@@ -90,11 +93,13 @@ func createNewSheet(srv *sheets.Service) error {
 		}},
 	}
 
-	_, err := srv.Spreadsheets.BatchUpdate(spreadsheetID, rbr).Context(context.Background()).Do()
+	sheet, err := srv.Spreadsheets.BatchUpdate(spreadsheetID, rbr).Context(context.Background()).Do()
 	if err != nil {
 		color.Red("Không thể tạo sheet mới: %s %v", sheetName, err)
 		return err
 	}
+
+	sheetID = sheet.Replies[0].AddSheet.Properties.SheetId
 
 	color.Green("Đã tạo sheet mới '%s'.\n", sheetName)
 	return addBaseFields(srv)

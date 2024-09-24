@@ -27,7 +27,8 @@ type Upload struct {
 
 var userDataDir = ""
 
-func SetupContextChrome() (context.Context, context.CancelFunc) {
+func SetupContextChrome(timeout int) (context.Context, context.CancelFunc) {
+	timeout += 2
 	opts := []chromedp.ExecAllocatorOption{}
 	opts = append(opts,
 		chromedp.Flag("headless", false),
@@ -35,28 +36,30 @@ func SetupContextChrome() (context.Context, context.CancelFunc) {
 		chromedp.Flag("remote-debugging-port", "9222"),
 		chromedp.Flag("allow-running-insecure-content", true),
 	)
-	ctx, _ := context.WithTimeout(context.Background(), 120*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Minute)
 	allocCtx, _ := chromedp.NewExecAllocator(ctx, opts...)
 	return chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 }
 
 func ListFilesInDirectory(directory string) ([]*Upload, error) {
 	uploads := make([]*Upload, 0)
-	date := time.Now().Format(time.DateOnly)
+	date := time.Now().Format(time.DateTime)
 	// Walk through all files and directories in the specified directory
 	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		// Kiểm tra xem đó có phải là file không (không phải thư mục)
-		if !info.IsDir() {
+		fileType := getFileType(path)
+		if !info.IsDir() && fileType == "video" {
 			up := &Upload{
 				Path: path,
-				Type: getFileType(path),
+				Type: fileType,
 				Date: date,
 			}
 			uploads = append(uploads, up) // Thêm đường dẫn file vào slice
 		}
+
 		return nil
 	})
 
